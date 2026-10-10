@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>소주연 필모 체크리스트</title>
+<style>
+:root{--bg:#f6f8f4;--card:#fff;--tx:#1f2a22;--sub:#6b7a6f;--ac:#3f8f5f;--ac2:#e3f1e8;--bd:#dfe6dc;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151a16;--card:#1e251f;--tx:#e8efe9;--sub:#93a498;--ac:#6cc58b;--ac2:#25382b;--bd:#2c372f}}
+:root[data-theme="dark"]{--bg:#151a16;--card:#1e251f;--tx:#e8efe9;--sub:#93a498;--ac:#6cc58b;--ac2:#25382b;--bd:#2c372f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{margin:0;font-size:26px}
+.tag{color:var(--sub);font-size:14px;margin:4px 0 16px}
+.prog{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.bar{height:10px;background:var(--ac2);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--ac);width:0;transition:width .3s}
+.row{display:flex;justify-content:space-between;font-size:14px;gap:8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
+.tabs button,.tools button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:99px;padding:6px 13px;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.tabs button.on,.tools button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px}
+h2{font-size:17px;margin:22px 0 8px;display:flex;justify-content:space-between;align-items:baseline}
+h2 small{font-weight:400;color:var(--sub);font-size:13px}
+.item{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:11px 14px;margin-bottom:6px;cursor:pointer}
+.item input{width:20px;height:20px;accent-color:var(--ac);margin-top:2px;flex:none}
+.item.done{background:var(--ac2)}
+.item.done .t{text-decoration:line-through;opacity:.6}
+.t{font-weight:600}
+.m{font-size:13px;color:var(--sub)}
+.y{font-size:12px;color:var(--ac);font-weight:700;min-width:34px;margin-top:2px}
+.empty{color:var(--sub);text-align:center;padding:30px 0}
+footer{margin-top:30px;font-size:12px;color:var(--sub);text-align:center}
+footer a{color:var(--ac)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🌿 소주연 필모 체크리스트</h1>
+<p class="tag">영화 · 드라마 · 연극 · 뮤직비디오 · 라디오 · 광고 — 내가 본 작품을 체크해 보세요</p>
+<div class="prog"><div class="row"><b id="pt">0 / 0 완료</b><span id="pp">0%</span></div><div class="bar"><i id="pb"></i></div></div>
+<div class="tabs" id="tabs"></div>
+<div class="tools"><button data-f="all" class="on">전체</button><button data-f="todo">안 본 것</button><button data-f="done">본 것</button><button id="so">정렬: 오래된순</button><button id="rs">초기화</button></div>
+<div id="list"></div>
+<footer>출처: <a href="https://namu.wiki/w/%EC%86%8C%EC%A3%BC%EC%97%B0" target="_blank" rel="noopener">나무위키 '소주연'</a> (CC BY-NC-SA 2.0 KR) · 2026.09 기준 · 체크 상태는 이 브라우저에만 저장됩니다</footer>
+</div>
+<script>
+// 형식: 연도|제목|배역/아티스트|비고
+const C={movie:"영화",drama:"드라마",play:"연극",mv:"뮤직비디오",radio:"라디오",ad:"광고"};
+const D={
+movie:["2017|이름|주연|단편영화","2018|속닥속닥|여은하 (주연)|장편 데뷔작 · 7.13 개봉","2020|태백권|특별출연|","2020|잔칫날|김경미 (주연)|독립영화 · 12.2 개봉","미정|다이얼걸|유라|단편영화"],
+drama:["2017|하찮아도 괜찮아|김지안 (주연)|플레이리스트 · 웹드라마","2018|내사랑 치유기|양은주 (조연)|MBC","2019|회사 가기 싫어|이유진 (주연)|KBS 2TV","2019|오지는 녀석들|이진주|tvN D · 웹드라마","2020|낭만닥터 김사부 2|윤아름 (조연)|SBS","2020|산후조리원|알렉스 최|tvN · 특별출연","2020|도시남녀의 사랑법|서린이 (주연)|카카오TV · 웹드라마","2020|아름다웠던 우리에게|신솔이|카카오TV","2021|KBS 드라마 스페셜 - 셋|김종희|KBS 2TV · 단막극","2022|청춘 블라썸|한소망|Wavve · 웹드라마","2023|낭만닥터 김사부 3|윤아름 (조연)|SBS","2024|졸업|남청미|tvN","2025|우리들의 초콜릿 순간|주슬기 (주연)|SBS · 단막극","2025|프로보노|박기쁨|tvN · 12.6 첫 방송","2026|고백해서 미안합니다|김세라|드라마박스 · 숏폼 드라마"],
+play:["2025|바닷마을 다이어리|치카|예술의전당 자유소극장","2026|클로저|앨리스|예스24스테이지 2관","2026|화이트래빗 레드래빗||예술의전당 자유소극장"],
+mv:["2017|SMILE|존박|","2017|인턴|옥상달빛|","2017|연애상담|옥상달빛|","2017|두려워질 만큼|슈가볼|","2017|티가나|유승우 X 윤하|","2017|star|보이프렌드|","2019|청춘|임현정|","2019|이별하긴 하겠지|월간 윤종신|","2019|워커홀릭|월간 윤종신|","2019|Lemon|ADOY|"],
+radio:["2018|악동뮤지션 수현의 볼륨을 높여요|KBS CoolFM|","2019|이수지의 가요광장|KBS CoolFM|","2020|김영철의 파워FM|SBS 파워FM|","2020|허지웅 쇼|SBS 러브FM|","2020|박하선의 씨네타운|SBS 파워FM|"],
+ad:["2017|매스틱인핸서|투쿨포스쿨|","2017|가그린 '무색소'편|동아제약|박보영과 함께 · 데뷔작","2017|아비브 코스메틱|㈜포컴퍼니|","2017|반려동물 IoT앳홈 '자장가의 비밀'편|LG U+|","2017|아웃백 토마호크 스테이크|아웃백 스테이크하우스|","2018|브링그린|올리브영|","2018|0플랜 '카페'편|SK텔레콤|","2018|기업 PR|브랜디|","2018|호로요이 - 오늘은 쉽니다|산토리|칼퇴 · 데이트 · 주말편","2019|농심 튀김우동|농심그룹|컵라면 · 봉지면편","2019|청년내일채움공제|고용노동부|홍보 영상","2019|호로요이 - 오늘은 쉽니다|산토리|홈파티 · 도심캠핑 · 소확행편","2020|클린뷰티|올리브영|","2020|네이처카인드|제이에스벤처스|","2021|보노|한국아지노모도|","2025|바이오코어|CJ웰케어|모델 발탁"]
+};
+const all=[];
+for(const k in D)D[k].forEach(s=>{const[y,t,r,n]=s.split("|");all.push({id:k+y+t,k,y,t,r,n})});
+let st=new Set(),tab="all",flt="all",desc=false;
+try{st=new Set(JSON.parse(localStorage.getItem("sjy-chk")||"[]"))}catch(e){}
+function save(){try{localStorage.setItem("sjy-chk",JSON.stringify([...st]))}catch(e){}}
+const $=id=>document.getElementById(id);
+const tabs=$("tabs");
+[["all","전체"],...Object.entries(C)].forEach(([k,v])=>{const b=document.createElement("button");b.textContent=v;b.dataset.k=k;if(k=="all")b.className="on";tabs.appendChild(b)});
+function yv(y){return y=="미정"?9999:+y}
+function render(){
+ const dn=all.filter(a=>st.has(a.id)).length;
+ $("pt").textContent=dn+" / "+all.length+" 완료";
+ const p=all.length?Math.round(dn/all.length*100):0;$("pp").textContent=p+"%";$("pb").style.width=p+"%";
+ [...tabs.children].forEach(b=>{const k=b.dataset.k;const L=all.filter(a=>k=="all"||a.k==k);b.textContent=(k=="all"?"전체":C[k])+" "+L.filter(a=>st.has(a.id)).length+"/"+L.length;b.classList.toggle("on",k==tab)});
+ let h="";
+ for(const k in C){
+  if(tab!="all"&&tab!=k)continue;
+  const L=all.filter(a=>a.k==k);
+  let V=L.filter(a=>flt=="all"||(flt=="done")==st.has(a.id));
+  V=V.slice().sort((a,b)=>desc?yv(b.y)-yv(a.y):yv(a.y)-yv(b.y));
+  if(!V.length)continue;
+  h+=`<h2>${C[k]}<small>${L.filter(a=>st.has(a.id)).length}/${L.length}</small></h2>`;
+  V.forEach(a=>{const d=st.has(a.id);const m=[a.r,a.n].filter(Boolean).join(" · ");
+   h+=`<label class="item${d?" done":""}"><input type="checkbox" data-id="${a.id.replace(/"/g,"&quot;")}"${d?" checked":""}><span class="y">${a.y}</span><span><div class="t">${a.t}</div><div class="m">${m}</div></span></label>`});
+ }
+ $("list").innerHTML=h||'<div class="empty">표시할 항목이 없어요 🌱</div>';
+}
+$("list").addEventListener("change",e=>{const id=e.target.dataset.id;if(!id)return;e.target.checked?st.add(id):st.delete(id);save();render()});
+tabs.addEventListener("click",e=>{if(e.target.dataset.k){tab=e.target.dataset.k;render()}});
+document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{flt=b.dataset.f;document.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x==b));render()});
+$("so").onclick=()=>{desc=!desc;$("so").textContent="정렬: "+(desc?"최신순":"오래된순");render()};
+$("rs").onclick=()=>{if(confirm("모든 체크를 초기화할까요?")){st.clear();save();render()}};
+render();
+</script>
+</body>
+</html>
